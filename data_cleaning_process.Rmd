@@ -1,0 +1,202 @@
+---
+title: "Cyclistic Bike Sharing Company Case Study"
+date: "11/01/2022"
+output: 
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<br>
+
+## Data Cleaning Process
+
+Install the necessary packages and load them.
+
+```{r, eval=FALSE}
+install.packages("tidyverse")
+install.packages("skimr")
+install.packages("janitor")
+install.packages("reshape")
+```
+
+```{r, message=FALSE, eval=TRUE}
+library(tidyverse)
+library(skimr)
+library(janitor)
+library(lubridate)
+library(reshape)
+```
+
+<br>
+
+### 1. Collect Data
+
+Set the working directory and import all the needed data. In this case study, the required data sets are not combined into a single csv file. Hence, they are imported separately.
+
+```{r, eval=FALSE}
+getwd()
+setwd("C:/Users/Christian Rhomel/Documents/Data Analytics/Course_8_Capstone_Project")
+```
+
+```{r, message=FALSE, eval=TRUE}
+data_09_2021 <- read_csv("202109-divvy-tripdata.csv")
+data_10_2021 <- read_csv("202110-divvy-tripdata.csv")
+data_11_2021 <- read_csv("202111-divvy-tripdata.csv")
+data_12_2021 <- read_csv("202112-divvy-tripdata.csv")
+data_01_2022 <- read_csv("202201-divvy-tripdata.csv")
+data_02_2022 <- read_csv("202202-divvy-tripdata.csv")
+data_03_2022 <- read_csv("202203-divvy-tripdata.csv")
+data_04_2022 <- read_csv("202204-divvy-tripdata.csv")
+data_05_2022 <- read_csv("202205-divvy-tripdata.csv")
+data_06_2022 <- read_csv("202206-divvy-tripdata.csv")
+data_07_2022 <- read_csv("202207-divvy-tripdata.csv")
+data_08_2022 <- read_csv("202208-divvy-tripdata.csv")
+data_09_2022 <- read_csv("202209-divvy-tripdata.csv")
+
+```
+<br>
+
+
+
+### 2. Data Wrangling
+
+The column names of each data frame are checked and compared for they need to have same fields to be able to combine them into a one big data frame.
+
+```{r, eval=FALSE}
+colnames(data_09_2021)
+colnames(data_10_2021)
+colnames(data_11_2021)
+colnames(data_12_2021)
+colnames(data_01_2022)
+colnames(data_02_2022)
+colnames(data_03_2022)
+colnames(data_04_2022)
+colnames(data_05_2022)
+colnames(data_06_2022)
+colnames(data_07_2022)
+colnames(data_08_2022)
+colnames(data_09_2022)
+```
+
+```{r, message=FALSE, eval=TRUE}
+all_trips <- bind_rows(data_09_2021, data_10_2021, data_11_2021,
+                       data_12_2021, data_01_2022, data_02_2022,
+                       data_03_2022, data_04_2022, data_05_2022,
+                       data_06_2022, data_07_2022, data_08_2022,
+                       data_09_2022)
+```
+
+<br>
+The column names are changed to be more consistent and to make them much easier to understand. Apparently, both dplyr and reshape packages have rename function so the package to use must be stated.
+
+```{r, message=FALSE, eval=TRUE}
+all_trips <- dplyr::rename(all_trips, trip_id = ride_id, bike_type = rideable_type,
+                   from_station_name = start_station_name,
+                   from_station_id = start_station_id,
+                   to_station_name = end_station_name,
+                   to_station_id = end_station_id,
+                   user_type = member_casual)
+```
+<br>
+
+
+
+### 3. Clean Up and Add Data to Prepare for Analysis
+
+To better understand the data at hand, the structure of data frame is checked to see the if the fields have the right data type for analysis. Dimension is also inspected to see the number of rows and columns.
+
+```{r eval=FALSE}
+dim(all_trips)
+str(all_trips)
+```
+<br>
+Separate columns are added for day, month, year, and day of the week when the user started the trip. All of which might be needed for future analysis that can help uncover trends and powerful insights.
+
+```{r, message=FALSE, eval=TRUE}
+all_trips$date <- as.Date(all_trips$started_at)
+all_trips$month <- format(as.Date(all_trips$date),"%m")
+all_trips$year <- format(as.Date(all_trips$date), "%Y")
+all_trips$day <- format(as.Date(all_trips$date), "%d")
+all_trips$day_of_week <- format(as.Date(all_trips$date), "%A")
+# Putting the days of the week column in right order
+all_trips$day_of_week <- ordered(all_trips$day_of_week, levels = c("Sunday",
+                                                                   "Monday",
+                                                                   "Tuesday",
+                                                                   "Wednesday",
+                                                                   "Thursday",
+                                                                   "Friday",
+                                                                   "Saturday"))
+```
+<br>
+The current month column is integer. Converting it to actual month might be more suitable and easier to understand for our analysis.
+
+```{r, message=FALSE, eval=TRUE}
+all_trips$month <- month.abb[as.numeric(all_trips$month)]
+```
+<br>
+Calculating the trip duration or ride length can be very helpful to understand the difference between casual riders and annual members. The ride length is initially measured in seconds, the **summary()** function is used to have a glimpse of basic statistics of this field and to check if it is better to express it in seconds, in minutes, or in hours. The average ride length is more than 60 seconds and less than 1 hour, hence it is decided to express in minutes.
+
+```{r, message=FALSE, eval=TRUE}
+all_trips$ride_length_sec <- difftime(all_trips$ended_at, all_trips$started_at)
+
+```
+
+```{r}
+summary(as.numeric(as.character(all_trips$ride_length_sec)))
+
+all_trips$ride_length_min <- (as.numeric(as.character(all_trips$ride_length_sec)))/60
+```
+<br>
+As inspected from the output of the previous code, the minimum ride length is negative. It is essential to identify these rows for these are bad data that has to be removed. Additionally, there were zero ride lengths which will not be helpful in our analysis. Hence, they were also removed.
+
+```{r}
+subset(all_trips, all_trips$ride_length_min < 0)
+all_trips <- subset(all_trips, all_trips$ride_length_min > 0)
+```
+<br>
+Through exploration of data, there were also plenty of missing values. Mostly, if not all, were station names. These rows with missing values should also be removed.
+
+```{r}
+# Removing all rows with missing values
+all_trips[rowSums(is.na(all_trips)) > 0,]
+all_trips <- all_trips %>% na.omit()
+```
+<br>
+
+
+### 4. Conduct Descriptive Analysis
+
+Descriptive analysis on ride length.
+
+```{r}
+summary(all_trips$ride_length_min)
+```
+<br>
+Simple analysis can be conducted by calculating the average ride length of both user type (casual and member) in each day of the week.
+
+```{r}
+aggregate(all_trips$ride_length_min ~ all_trips$user_type + all_trips$day_of_week,
+          FUN = mean)
+```
+
+<br>
+
+
+### 5. Export File for Data Visualization
+
+To have lesser size of the data set, some fields were not included on the export. The fields included were the primary data needed for visualization and to help the visualization software to process data a lot faster. Now, the cleaned data is ready for visualization.
+
+```{r, eval=FALSE}
+all_trips_export <- select(all_trips, -c(trip_id, started_at, ended_at, from_station_id, to_station_id, day, ride_length_sec))
+all_trips_same_station <- subset(all_trips_export, all_trips_export$from_station_name == all_trips_export$to_station_name) 
+
+write.csv(all_trips_export, "C:/Users/Christian Rhomel/Documents/Data Analytics/Course_8_Capstone_Project/all_trips.csv")
+write.csv(all_trips_same_station, "C:/Users/Christian Rhomel/Documents/Data Analytics/Course_8_Capstone_Project/all_trips_same_station.csv")
+```
