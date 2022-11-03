@@ -21,8 +21,14 @@ The Cyclistic's historical trip data is used and provided on Google Data Analyti
 Personal Identifiable Information and other confidential data were already removed to avoid data-privacy issues. The data set includes station names, latitude & longitude, bike type used, date started and ended which could really help to analyze the difference between user types. 
 
 ### Process
-Upon downloading the data sets, it was noticed that it has a very big file size. Thus, importing and processing the data in SQL or R was more suitable than doing it in Excel or Google Sheets. But R was chosen for this case study due to personal preference. The data set was checked for errors and cleaned by removing out of range values, missing values,and duplicate instances. Data types of fields were checked to ensure it consistency and validity. Some fields were also transformed or added. For detailed process check the data cleaning file above. 
+Upon downloading the data sets, it was noticed that it has a very big file size. Thus, importing and processing the data in SQL or R was more suitable than doing it in Excel or Google Sheets. But R was chosen for this case study due to personal preference. The data set was checked for errors and cleaned by removing out of range values, missing values,and duplicate instances. Data types of fields were checked to ensure it consistency and validity. Some fields were also transformed or added. For detailed process, check the data cleaning file above. 
 
-### Analyze
+### Analyze and Share
+Although analyze and share are two different phases in data analysis, it was easier to analyze when it is done simulataneously with visualizations. Graphs and charts were really helpful for extraction of meaningful trends and insights that would otherwise be difficult to see with just mere table and calculations. The maximum, minimum, median ,and average ride length were inspected for both annual members and casual riders. The top start stations and end stations for casual riders were also identified. All of the visualizations were done on Tableau, see it all here: https://public.tableau.com/views/CylisticBikeShareCompanyCaseStudy/bike_preferrence?:language=en-US&:display_count=n&:origin=viz_share_link. 
+For more detailed analysis, see the powerpoint presentation above. 
+
+### Act
+In this part, overall findings and conclusions were stated. Recommendations for the company, based on the analysis from the previous phase, were given. To see summary of findings and the recommendations, see the powerpoint presentation above. 
+
 
 
